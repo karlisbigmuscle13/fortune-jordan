@@ -40,6 +40,8 @@
         const targets = [];
         const targetSize = 30;
         let score = 0;
+        let canShoot = true;
+        const bulletCooldown = 300; // 300ms cooldown
 
         const keys = {
             a: false,
@@ -65,14 +67,20 @@
         }
 
         function shootBullet() {
-            bullets.push({
-                x: player.x + player.width / 2 - 5,
-                y: player.y,
-                width: 5,
-                height: 15,
-                color: 'yellow',
-                speed: 10
-            });
+            if (canShoot) {
+                bullets.push({
+                    x: player.x + player.width / 2 - 10,
+                    y: player.y,
+                    width: 10,
+                    height: 20,
+                    color: 'yellow',
+                    speed: 10
+                });
+                canShoot = false;
+                setTimeout(() => {
+                    canShoot = true;
+                }, bulletCooldown);
+            }
         }
 
         function spawnTarget() {
@@ -168,3 +176,4 @@
     </script>
 </body>
 </html>
+
