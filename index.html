@@ -3,11 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Run from the Red Cube</title>
+    <title>Gun Game</title>
     <style>
         body {
             margin: 0;
             overflow: hidden;
+            background-color: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
         }
         canvas {
             display: block;
@@ -26,85 +29,141 @@
 
         const player = {
             x: canvas.width / 2,
-            y: canvas.height / 2,
-            size: 20,
-            color: 'green',
-            speed: 5
+            y: canvas.height - 50,
+            width: 50,
+            height: 20,
+            color: 'blue',
+            speed: 7
         };
 
-        const enemy = {
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height,
-            size: 20,
-            color: 'red',
-            speed: 5
-        };
+        const bullets = [];
+        const targets = [];
+        const targetSize = 30;
+        let score = 0;
 
-        let keys = {
-            w: false,
+        const keys = {
             a: false,
-            s: false,
-            d: false
+            d: false,
+            space: false
         };
 
         window.addEventListener('keydown', (e) => {
-            if (keys.hasOwnProperty(e.key)) keys[e.key] = true;
+            if (e.key === 'a') keys.a = true;
+            if (e.key === 'd') keys.d = true;
+            if (e.key === ' ') keys.space = true;
         });
 
         window.addEventListener('keyup', (e) => {
-            if (keys.hasOwnProperty(e.key)) keys[e.key] = false;
+            if (e.key === 'a') keys.a = false;
+            if (e.key === 'd') keys.d = false;
+            if (e.key === ' ') keys.space = false;
         });
 
         function movePlayer() {
-            if (keys.w && player.y > 0) player.y -= player.speed;
-            if (keys.s && player.y + player.size < canvas.height) player.y += player.speed;
             if (keys.a && player.x > 0) player.x -= player.speed;
-            if (keys.d && player.x + player.size < canvas.width) player.x += player.speed;
+            if (keys.d && player.x + player.width < canvas.width) player.x += player.speed;
         }
 
-        function moveEnemy() {
-            const dx = player.x - enemy.x;
-            const dy = player.y - enemy.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-
-            if (distance > 0) {
-                enemy.x += (dx / distance) * enemy.speed;
-                enemy.y += (dy / distance) * enemy.speed;
-            }
+        function shootBullet() {
+            bullets.push({
+                x: player.x + player.width / 2 - 5,
+                y: player.y,
+                width: 5,
+                height: 15,
+                color: 'yellow',
+                speed: 10
+            });
         }
 
-        function checkCollision() {
-            const dx = player.x - enemy.x;
-            const dy = player.y - enemy.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-
-            if (distance < player.size) {
-                alert('Game Over! You were caught by the red cube.');
-                player.x = canvas.width / 2;
-                player.y = canvas.height / 2;
-                enemy.x = Math.random() * canvas.width;
-                enemy.y = Math.random() * canvas.height;
-            }
+        function spawnTarget() {
+            const x = Math.random() * (canvas.width - targetSize);
+            targets.push({
+                x: x,
+                y: 0,
+                width: targetSize,
+                height: targetSize,
+                color: 'red',
+                speed: 2 + Math.random() * 3
+            });
         }
 
-        function drawCube(cube) {
-            ctx.fillStyle = cube.color;
-            ctx.fillRect(cube.x, cube.y, cube.size, cube.size);
+        function updateBullets() {
+            bullets.forEach((bullet, index) => {
+                bullet.y -= bullet.speed;
+                if (bullet.y + bullet.height < 0) bullets.splice(index, 1);
+            });
+        }
+
+        function updateTargets() {
+            targets.forEach((target, index) => {
+                target.y += target.speed;
+                if (target.y > canvas.height) {
+                    targets.splice(index, 1);
+                }
+            });
+        }
+
+        function checkCollisions() {
+            bullets.forEach((bullet, bIndex) => {
+                targets.forEach((target, tIndex) => {
+                    if (
+                        bullet.x < target.x + target.width &&
+                        bullet.x + bullet.width > target.x &&
+                        bullet.y < target.y + target.height &&
+                        bullet.y + bullet.height > target.y
+                    ) {
+                        bullets.splice(bIndex, 1);
+                        targets.splice(tIndex, 1);
+                        score++;
+                    }
+                });
+            });
+        }
+
+        function drawPlayer() {
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+        }
+
+        function drawBullets() {
+            bullets.forEach(bullet => {
+                ctx.fillStyle = bullet.color;
+                ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+            });
+        }
+
+        function drawTargets() {
+            targets.forEach(target => {
+                ctx.fillStyle = target.color;
+                ctx.fillRect(target.x, target.y, target.width, target.height);
+            });
+        }
+
+        function drawScore() {
+            ctx.fillStyle = 'white';
+            ctx.font = '20px Arial';
+            ctx.fillText(`Score: ${score}`, 10, 30);
         }
 
         function gameLoop() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             movePlayer();
-            moveEnemy();
-            checkCollision();
+            if (keys.space) shootBullet();
 
-            drawCube(player);
-            drawCube(enemy);
+            updateBullets();
+            updateTargets();
+            checkCollisions();
+
+            drawPlayer();
+            drawBullets();
+            drawTargets();
+            drawScore();
 
             requestAnimationFrame(gameLoop);
         }
 
+        setInterval(spawnTarget, 1000);
         gameLoop();
     </script>
 </body>
