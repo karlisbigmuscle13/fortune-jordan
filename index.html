@@ -15,14 +15,29 @@
         canvas {
             display: block;
         }
+        #playAgain {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 10px 20px;
+            font-size: 20px;
+            background-color: #fff;
+            color: #000;
+            border: none;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <canvas id="gameCanvas"></canvas>
+    <button id="playAgain">Play Again</button>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        const playAgainButton = document.getElementById('playAgain');
 
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
@@ -41,7 +56,7 @@
         const targetSize = 30;
         let score = 0;
         let canShoot = true;
-        const bulletCooldown = 2300; // 2.3 seconds cooldown
+        const bulletCooldown = 250; // 250ms cooldown
         let gameOver = false;
 
         const keys = {
@@ -62,6 +77,10 @@
             if (e.key === ' ') keys.space = false;
         });
 
+        playAgainButton.addEventListener('click', () => {
+            resetGame();
+        });
+
         function movePlayer() {
             if (keys.a && player.x > 0) player.x -= player.speed;
             if (keys.d && player.x + player.width < canvas.width) player.x += player.speed;
@@ -70,10 +89,10 @@
         function shootBullet() {
             if (canShoot) {
                 bullets.push({
-                    x: player.x + player.width / 2 - 10,
+                    x: player.x + player.width / 2 - 15,
                     y: player.y,
-                    width: 10,
-                    height: 20,
+                    width: 30,
+                    height: 40,
                     color: 'yellow',
                     speed: 10
                 });
@@ -166,6 +185,16 @@
             ctx.fillText(`Score: ${score}`, canvas.width / 2, 50);
         }
 
+        function resetGame() {
+            score = 0;
+            gameOver = false;
+            bullets.length = 0;
+            targets.length = 0;
+            player.x = canvas.width / 2;
+            playAgainButton.style.display = 'none';
+            gameLoop();
+        }
+
         function gameLoop() {
             if (gameOver) {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -176,6 +205,7 @@
                 ctx.fillStyle = 'white';
                 ctx.font = '40px Arial';
                 ctx.fillText(`Final Score: ${score}`, canvas.width / 2, canvas.height / 2 + 60);
+                playAgainButton.style.display = 'block';
                 return;
             }
 
@@ -201,4 +231,3 @@
     </script>
 </body>
 </html>
-
