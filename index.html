@@ -161,16 +161,6 @@
         }
 
         function checkCollisions() {
-            bullets.forEach((bullet, bIndex) => {
-                targets.forEach((target, tIndex) => {
-                    if (bullet.x < target.x + target.width && bullet.x + bullet.width > target.x && bullet.y < target.y + target.height && bullet.y + bullet.height > target.y) {
-                        bullets.splice(bIndex, 1);
-                        targets.splice(tIndex, 1);
-                        score++;
-                    }
-                });
-            });
-
             targets.forEach(target => {
                 if (player.x < target.x + target.width && player.x + player.width > target.x && player.y < target.y + target.height && player.y + player.height > target.y) {
                     gameOver = true;
@@ -182,23 +172,11 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = player.color;
             ctx.fillRect(player.x, player.y, player.width, player.height);
-            bullets.forEach(bullet => {
-                ctx.fillStyle = bullet.color;
-                ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
-            });
-            targets.forEach(target => {
-                ctx.fillStyle = target.color;
-                ctx.fillRect(target.x, target.y, target.width, target.height);
-            });
-            ctx.fillStyle = 'white';
-            ctx.font = '40px Arial';
-            ctx.fillText(`Score: ${score}`, canvas.width / 2, 50);
         }
 
         function gameLoop() {
             if (gameOver) return;
             movePlayer();
-            if (keys.space) shootBullet();
             updateGameObjects();
             checkCollisions();
             drawGame();
@@ -209,3 +187,4 @@
     </script>
 </body>
 </html>
+
