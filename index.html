@@ -11,9 +11,36 @@
             background-color: #000;
             color: #fff;
             font-family: Arial, sans-serif;
+            text-align: center;
         }
         canvas {
-            display: block;
+            display: none;
+        }
+        #startScreen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: black;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        #startButton {
+            padding: 20px 40px;
+            font-size: 24px;
+            background-color: #fff;
+            color: #000;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        #credits {
+            position: absolute;
+            bottom: 10px;
+            width: 100%;
+            text-align: center;
+            font-size: 18px;
         }
         #playAgain {
             display: none;
@@ -32,10 +59,17 @@
     </style>
 </head>
 <body>
+    <div id="startScreen">
+        <h1>Gun Game</h1>
+        <button id="startButton">Start Game</button>
+    </div>
     <canvas id="gameCanvas"></canvas>
     <button id="playAgain">Play Again</button>
+    <div id="credits">Credits: karlisbigmuscle13</div>
 
     <script>
+        const startScreen = document.getElementById('startScreen');
+        const startButton = document.getElementById('startButton');
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const playAgainButton = document.getElementById('playAgain');
@@ -57,14 +91,10 @@
         const targetSize = 30;
         let score = 0;
         let canShoot = true;
-        const bulletCooldown = 350; // 350ms cooldown
+        const bulletCooldown = 350;
         let gameOver = false;
 
-        const keys = {
-            a: false,
-            d: false,
-            space: false
-        };
+        const keys = { a: false, d: false, space: false };
 
         window.addEventListener('keydown', (e) => {
             if (e.key === 'a') keys.a = true;
@@ -78,9 +108,14 @@
             if (e.key === ' ') keys.space = false;
         });
 
-        playAgainButton.addEventListener('click', () => {
-            resetGame();
-        });
+        playAgainButton.addEventListener('click', resetGame);
+        startButton.addEventListener('click', startGame);
+
+        function startGame() {
+            startScreen.style.display = 'none';
+            canvas.style.display = 'block';
+            gameLoop();
+        }
 
         function movePlayer() {
             if (keys.a && player.x > 0) player.x -= player.speed;
@@ -98,16 +133,13 @@
                     speed: 10
                 });
                 canShoot = false;
-                setTimeout(() => {
-                    canShoot = true;
-                }, bulletCooldown);
+                setTimeout(() => { canShoot = true; }, bulletCooldown);
             }
         }
 
         function spawnTarget() {
-            const x = Math.random() * (canvas.width - targetSize);
             targets.push({
-                x: x,
+                x: Math.random() * (canvas.width - targetSize),
                 y: 0,
                 width: targetSize,
                 height: targetSize,
@@ -116,31 +148,22 @@
             });
         }
 
-        function updateBullets() {
+        function updateGameObjects() {
             bullets.forEach((bullet, index) => {
                 bullet.y -= bullet.speed;
                 if (bullet.y + bullet.height < 0) bullets.splice(index, 1);
             });
-        }
 
-        function updateTargets() {
             targets.forEach((target, index) => {
                 target.y += target.speed;
-                if (target.y > canvas.height) {
-                    targets.splice(index, 1);
-                }
+                if (target.y > canvas.height) targets.splice(index, 1);
             });
         }
 
         function checkCollisions() {
             bullets.forEach((bullet, bIndex) => {
                 targets.forEach((target, tIndex) => {
-                    if (
-                        bullet.x < target.x + target.width &&
-                        bullet.x + bullet.width > target.x &&
-                        bullet.y < target.y + target.height &&
-                        bullet.y + bullet.height > target.y
-                    ) {
+                    if (bullet.x < target.x + target.width && bullet.x + bullet.width > target.x && bullet.y < target.y + target.height && bullet.y + bullet.height > target.y) {
                         bullets.splice(bIndex, 1);
                         targets.splice(tIndex, 1);
                         score++;
@@ -149,86 +172,40 @@
             });
 
             targets.forEach(target => {
-                if (
-                    player.x < target.x + target.width &&
-                    player.x + player.width > target.x &&
-                    player.y < target.y + target.height &&
-                    player.y + player.height > target.y
-                ) {
+                if (player.x < target.x + target.width && player.x + player.width > target.x && player.y < target.y + target.height && player.y + player.height > target.y) {
                     gameOver = true;
                 }
             });
         }
 
-        function drawPlayer() {
+        function drawGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = player.color;
             ctx.fillRect(player.x, player.y, player.width, player.height);
-        }
-
-        function drawBullets() {
             bullets.forEach(bullet => {
                 ctx.fillStyle = bullet.color;
                 ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
             });
-        }
-
-        function drawTargets() {
             targets.forEach(target => {
                 ctx.fillStyle = target.color;
                 ctx.fillRect(target.x, target.y, target.width, target.height);
             });
-        }
-
-        function drawScore() {
             ctx.fillStyle = 'white';
             ctx.font = '40px Arial';
-            ctx.textAlign = 'center';
             ctx.fillText(`Score: ${score}`, canvas.width / 2, 50);
         }
 
-        function resetGame() {
-            score = 0;
-            gameOver = false;
-            bullets.length = 0;
-            targets.length = 0;
-            player.x = canvas.width / 2;
-            playAgainButton.style.display = 'none';
-            gameLoop();
-        }
-
         function gameLoop() {
-            if (gameOver) {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = 'red';
-                ctx.font = '60px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText('Game Over!', canvas.width / 2, canvas.height / 2);
-                ctx.fillStyle = 'white';
-                ctx.font = '40px Arial';
-                ctx.fillText(`Final Score: ${score}`, canvas.width / 2, canvas.height / 2 + 60);
-                playAgainButton.style.display = 'block';
-                return;
-            }
-
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
+            if (gameOver) return;
             movePlayer();
             if (keys.space) shootBullet();
-
-            updateBullets();
-            updateTargets();
+            updateGameObjects();
             checkCollisions();
-
-            drawPlayer();
-            drawBullets();
-            drawTargets();
-            drawScore();
-
+            drawGame();
             requestAnimationFrame(gameLoop);
         }
 
         setInterval(spawnTarget, 1000);
-        gameLoop();
     </script>
 </body>
 </html>
